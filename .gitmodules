@@ -1,0 +1,4 @@
+[submodule "src/secp256k1-minimal"]
+	path = src/secp256k1-minimal
+	url = https://github.com/danneu/secp256k1-minimal.git
+
