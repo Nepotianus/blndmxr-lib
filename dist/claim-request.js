@@ -18,16 +18,18 @@ const POD = __importStar(require("./pod"));
 const magnitude_1 = __importDefault(require("./magnitude"));
 const buffutils = __importStar(require("./util/buffutils"));
 class ClaimRequest {
-    constructor(claimableHash, coinRequests, authorization, fee) {
+    constructor(claimableHash, coinRequests, authorization, fee, coinPeriod) {
         this.claimableHash = claimableHash;
         this.coinRequests = coinRequests;
         this.authorization = authorization;
         this.fee = fee;
+        this.coinPeriod = coinPeriod;
     }
-    static newAuthorized(claimableHash, coinRequests, claimantPrivateKey, fee) {
-        const hash = ClaimRequest.hashOf(claimableHash, coinRequests, fee);
+    static newAuthorized(claimableHash, coinRequests, claimantPrivateKey, fee, // TODO: this field is actually not really used 
+    coinPeriod) {
+        const hash = ClaimRequest.hashOf(claimableHash, coinRequests, fee, coinPeriod);
         const authorization = signature_1.default.compute(hash.buffer, claimantPrivateKey);
-        return new ClaimRequest(claimableHash, coinRequests, authorization, fee);
+        return new ClaimRequest(claimableHash, coinRequests, authorization, fee, coinPeriod);
     }
     static fromPOD(data) {
         if (typeof data !== 'object') {
@@ -64,9 +66,13 @@ class ClaimRequest {
         if (!POD.isAmount(fee)) {
             return new Error(`${fee} is not a number.`);
         }
-        return new ClaimRequest(claimableHash, coinRequests, authorization, fee);
+        const coinPeriod = data.coinPeriod;
+        if (!POD.isAmount(coinPeriod)) {
+            return new Error(`${coinPeriod} is not a number.`);
+        }
+        return new ClaimRequest(claimableHash, coinRequests, authorization, fee, coinPeriod);
     }
-    static hashOf(claimableHash, coinRequests, fee) {
+    static hashOf(claimableHash, coinRequests, fee, coinPeriod) {
         const h = hash_1.default.newBuilder('ClaimRequest');
         h.update(claimableHash.buffer);
         for (const cc of coinRequests) {
@@ -74,11 +80,12 @@ class ClaimRequest {
             h.update(cc.blindingNonce.buffer);
             h.update(cc.magnitude.buffer);
         }
+        h.update(buffutils.fromUint64(coinPeriod));
         h.update(buffutils.fromUint64(fee));
         return h.digest();
     }
     hash() {
-        return ClaimRequest.hashOf(this.claimableHash, this.coinRequests, this.fee);
+        return ClaimRequest.hashOf(this.claimableHash, this.coinRequests, this.fee, this.coinPeriod);
     }
     toPOD() {
         return {
@@ -91,6 +98,7 @@ class ClaimRequest {
                 magnitude: cr.magnitude.toPOD(),
             })),
             fee: this.fee,
+            coinPeriod: this.coinPeriod
         };
     }
     // how much is being claimed

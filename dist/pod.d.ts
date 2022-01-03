@@ -12,7 +12,7 @@ export interface CustodianInfo {
     acknowledgementKey: PublicKey;
     currency: string;
     fundingKey: PublicKey | PublicKey[];
-    blindCoinKeys: PublicKey[];
+    blindCoinKeys: PublicKey[][];
     wipeDate?: string;
 }
 export declare type CoinRequest = {
@@ -26,12 +26,14 @@ export interface ClaimRequest {
     claimableHash: Hash;
     coinRequests: CoinRequest[];
     fee: number;
+    coinPeriod: number;
 }
 export interface Coin {
     hash: string;
     receipt: Signature;
     magnitude: Magnitude;
     owner: string;
+    period: number;
 }
 export declare type CoinSet = Coin[];
 export interface Hookin {
@@ -49,6 +51,7 @@ export interface AbstractTransfer {
     authorization: string | null;
     claimant: PublicKey;
     fee: Amount;
+    decay: number;
     inputs: Coin[];
     initCreated?: number;
 }

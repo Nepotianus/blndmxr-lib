@@ -11,15 +11,17 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const hash_1 = __importDefault(require("./hash"));
+const POD = __importStar(require("./pod"));
 const public_key_1 = __importDefault(require("./public-key"));
 const signature_1 = __importDefault(require("./signature"));
 const magnitude_1 = __importDefault(require("./magnitude"));
 const Buffutils = __importStar(require("./util/buffutils"));
 class Coin {
-    constructor(owner, magnitude, receipt) {
+    constructor(owner, magnitude, receipt, period) {
         this.owner = owner;
         this.magnitude = magnitude;
         this.receipt = receipt;
+        this.period = period;
     }
     static fromPOD(data) {
         const owner = public_key_1.default.fromPOD(data.owner);
@@ -34,14 +36,18 @@ class Coin {
         if (receipt instanceof Error) {
             return receipt;
         }
-        const c = new Coin(owner, magnitude, receipt);
+        const period = data.period;
+        if (!POD.isAmount(data.period)) {
+            return new Error('Coin.fromPOD invalid number');
+        }
+        const c = new Coin(owner, magnitude, receipt, period);
         if (c.hash().toPOD() !== data.hash) {
             return new Error('hash did not match');
         }
         return c;
     }
     get buffer() {
-        return Buffutils.concat(this.owner.buffer, this.magnitude.buffer, this.receipt.buffer);
+        return Buffutils.concat(this.owner.buffer, this.magnitude.buffer, this.receipt.buffer, Buffutils.fromUint64(this.period));
     }
     hash() {
         return hash_1.default.fromMessage('Coin', this.buffer);
@@ -52,6 +58,7 @@ class Coin {
             receipt: this.receipt.toPOD(),
             magnitude: this.magnitude.toPOD(),
             owner: this.owner.toPOD(),
+            period: this.period
         };
     }
     get amount() {

@@ -24,7 +24,7 @@ class CustodianInfo {
     }
     hash() {
         return hash_1.default.fromMessage('Custodian', this.acknowledgementKey.buffer, Buffutils.fromUint32(this.currency.length), Buffutils.fromString(this.currency), ...(this.fundingKey instanceof Array ? this.fundingKey.map(bk => bk.buffer) : [this.fundingKey.buffer]), // can we spread like this?
-        ...this.blindCoinKeys.map(bk => bk.buffer), Buffutils.fromString(this.wipeDate ? this.wipeDate : ''));
+        ...[].concat(...this.blindCoinKeys.map(bk => bk.map(a => a.buffer))), Buffutils.fromString(this.wipeDate ? this.wipeDate : ''));
     }
     // 4 letter code for using in an Address
     prefix() {
@@ -34,12 +34,13 @@ class CustodianInfo {
             bech32.ALPHABET[hash[2] % 32] +
             bech32.ALPHABET[hash[3] % 32]);
     }
+    // wipeDate now functions as a sort of genesis date
     toPOD() {
         return {
             acknowledgementKey: this.acknowledgementKey.toPOD(),
             currency: this.currency,
             fundingKey: this.fundingKey instanceof Array ? this.fundingKey.map(fk => fk.toPOD()) : this.fundingKey.toPOD(),
-            blindCoinKeys: this.blindCoinKeys.map(bk => bk.toPOD()),
+            blindCoinKeys: this.blindCoinKeys.map(bk => bk.map(k => k.toPOD())),
             wipeDate: this.wipeDate,
         };
     }
@@ -72,16 +73,24 @@ class CustodianInfo {
             }
             fundingKey.push(fk);
         }
-        if (!Array.isArray(d.blindCoinKeys) || d.blindCoinKeys.length !== 31) {
-            return new Error('custodian expected an 31-length array for blindCoinKeys');
+        if (!Array.isArray(d.blindCoinKeys)) {
+            return new Error('needs to be an array');
         }
         const blindCoinKeys = [];
-        for (const bkstr of d.blindCoinKeys) {
-            const bk = public_key_1.default.fromPOD(bkstr);
-            if (bk instanceof Error) {
-                return bk;
+        for (let index = 0; index < d.blindCoinKeys.length; index++) {
+            const arr = d.blindCoinKeys[index];
+            if (!Array.isArray(arr) || arr.length !== 31) {
+                return new Error('custodian expected an 31-length array for blindCoinKeys');
             }
-            blindCoinKeys.push(bk);
+            const bks = [];
+            for (const bkstr of arr) {
+                const bk = public_key_1.default.fromPOD(bkstr);
+                if (bk instanceof Error) {
+                    return bk;
+                }
+                bks.push(bk);
+            }
+            blindCoinKeys.push(bks);
         }
         // doesn't force a type..
         const wipeDate = d.wipeDate;

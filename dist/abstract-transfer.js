@@ -18,10 +18,11 @@ const coin_1 = __importDefault(require("./coin"));
 const public_key_1 = __importDefault(require("./public-key"));
 const buffutils = __importStar(require("./util/buffutils"));
 class AbstractTransfer {
-    constructor({ amount, authorization, fee, inputs, initCreated }) {
+    constructor({ amount, authorization, fee, decay, inputs, initCreated }) {
         this.amount = amount;
         this.authorization = authorization;
         this.fee = fee;
+        this.decay = decay;
         this.initCreated = initCreated;
         assert_1.default(isHashSorted(inputs));
         this.inputs = inputs;
@@ -33,7 +34,7 @@ class AbstractTransfer {
         hashes.sort((a, b) => buffutils.compare(a.buffer, b.buffer));
     }
     static transferHash(td) {
-        return hash_1.default.fromMessage('Transfer', buffutils.fromUint64(td.amount), buffutils.fromUint64(td.fee), buffutils.fromUint64(td.inputs.length), ...td.inputs.map(i => i.buffer));
+        return hash_1.default.fromMessage('Transfer', buffutils.fromUint64(td.amount), buffutils.fromUint64(td.fee), buffutils.fromUint64(td.decay), buffutils.fromUint64(td.inputs.length), ...td.inputs.map(i => i.buffer));
     }
     toPOD() {
         return {
@@ -42,12 +43,13 @@ class AbstractTransfer {
             authorization: this.authorization ? this.authorization.toPOD() : null,
             claimant: this.claimant.toPOD(),
             fee: this.fee,
+            decay: this.decay,
             inputs: this.inputs.map(i => i.toPOD()),
             initCreated: this.initCreated,
         };
     }
     get claimableAmount() {
-        return this.inputAmount() - this.amount - this.fee;
+        return this.inputAmount() - this.amount - this.fee - this.decay;
     }
     inputAmount() {
         let amount = 0;
@@ -87,6 +89,10 @@ function parseTransferData(data) {
     if (!POD.isAmount(fee)) {
         return new Error('Transfer.fromPOD invalid fee');
     }
+    const decay = data.decay;
+    if (!POD.isAmount(decay)) {
+        return new Error('Transfer.fromPOD invalid decay');
+    }
     let inputAmount = 0;
     const inputs = [];
     for (const i of data.inputs) {
@@ -100,8 +106,8 @@ function parseTransferData(data) {
     if (!isHashSorted(inputs)) {
         return new Error('inputs are not in sorted order');
     }
-    if (inputAmount < amount + fee) {
-        return new Error('not sourcing enough input for amount and fee');
+    if (inputAmount < amount + fee + decay) {
+        return new Error('not sourcing enough input for amount and fee and decay');
     }
     const initCreated = data.initCreated;
     if (initCreated) {
@@ -109,7 +115,7 @@ function parseTransferData(data) {
             throw initCreated;
         }
     }
-    return { amount, authorization, fee, inputs, initCreated };
+    return { amount, authorization, fee, decay, inputs, initCreated };
 }
 exports.parseTransferData = parseTransferData;
 function isHashSorted(ts) {
