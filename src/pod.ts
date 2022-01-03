@@ -19,7 +19,7 @@ export interface CustodianInfo {
   acknowledgementKey: PublicKey;
   currency: string;
   fundingKey: PublicKey | PublicKey[];
-  blindCoinKeys: PublicKey[];
+  blindCoinKeys: PublicKey[][];
   wipeDate?: string;
 }
 
@@ -31,6 +31,7 @@ export interface ClaimRequest {
   claimableHash: Hash;
   coinRequests: CoinRequest[];
   fee: number;
+  coinPeriod: number;
 }
 
 export interface Coin {
@@ -38,6 +39,7 @@ export interface Coin {
   receipt: Signature;
   magnitude: Magnitude;
   owner: string;
+  period: number;
 }
 export type CoinSet = Coin[];
 
@@ -57,6 +59,7 @@ export interface AbstractTransfer {
   authorization: string | null; // bech32 pubkey
   claimant: PublicKey;
   fee: Amount;
+  decay: number;
   inputs: Coin[];
   initCreated?: number;
 }

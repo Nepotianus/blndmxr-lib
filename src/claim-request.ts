@@ -13,12 +13,13 @@ export default class ClaimRequest {
     claimableHash: Hash,
     coinRequests: CoinRequest[],
     claimantPrivateKey: PrivateKey,
-    fee: number
+    fee: number, // TODO: this field is actually not really used 
+    coinPeriod: number
   ) {
-    const hash = ClaimRequest.hashOf(claimableHash, coinRequests, fee);
+    const hash = ClaimRequest.hashOf(claimableHash, coinRequests, fee, coinPeriod);
     const authorization = Signature.compute(hash.buffer, claimantPrivateKey);
 
-    return new ClaimRequest(claimableHash, coinRequests, authorization, fee);
+    return new ClaimRequest(claimableHash, coinRequests, authorization, fee, coinPeriod);
   }
 
   public static fromPOD(data: any): ClaimRequest | Error {
@@ -65,21 +66,29 @@ export default class ClaimRequest {
       return new Error(`${fee} is not a number.`);
     }
 
-    return new ClaimRequest(claimableHash, coinRequests, authorization, fee);
+    const coinPeriod = data.coinPeriod;
+    if (!POD.isAmount(coinPeriod)) {
+        return new Error(`${coinPeriod} is not a number.`);
+    }
+
+    return new ClaimRequest(claimableHash, coinRequests, authorization, fee, coinPeriod);
   }
 
   public claimableHash: Hash;
   public coinRequests: CoinRequest[];
   public authorization: Signature;
   public fee: number;
-  constructor(claimableHash: Hash, coinRequests: CoinRequest[], authorization: Signature, fee: number) {
+  public coinPeriod: number;
+
+  constructor(claimableHash: Hash, coinRequests: CoinRequest[], authorization: Signature, fee: number, coinPeriod: number) {
     this.claimableHash = claimableHash;
     this.coinRequests = coinRequests;
     this.authorization = authorization;
     this.fee = fee;
+    this.coinPeriod = coinPeriod;
   }
 
-  public static hashOf(claimableHash: Hash, coinRequests: CoinRequest[], fee: number) {
+  public static hashOf(claimableHash: Hash, coinRequests: CoinRequest[], fee: number, coinPeriod: number) {
     const h = Hash.newBuilder('ClaimRequest');
     h.update(claimableHash.buffer);
     for (const cc of coinRequests) {
@@ -87,12 +96,13 @@ export default class ClaimRequest {
       h.update(cc.blindingNonce.buffer);
       h.update(cc.magnitude.buffer);
     }
+    h.update(buffutils.fromUint64(coinPeriod));
     h.update(buffutils.fromUint64(fee));
     return h.digest();
   }
 
   public hash(): Hash {
-    return ClaimRequest.hashOf(this.claimableHash, this.coinRequests, this.fee);
+    return ClaimRequest.hashOf(this.claimableHash, this.coinRequests, this.fee, this.coinPeriod);
   }
 
   public toPOD(): POD.ClaimRequest {
@@ -106,6 +116,7 @@ export default class ClaimRequest {
         magnitude: cr.magnitude.toPOD(),
       })),
       fee: this.fee,
+      coinPeriod: this.coinPeriod
     };
   }
 

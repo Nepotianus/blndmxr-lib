@@ -8,14 +8,14 @@ export default class CustodianInfo {
   acknowledgementKey: PublicKey;
   currency: string;
   fundingKey: PublicKey | PublicKey[];
-  blindCoinKeys: PublicKey[]; // of 31...
+  blindCoinKeys: PublicKey[][]; // of 31...
   wipeDate?: string;
 
   constructor(
     acknowledgementKey: PublicKey,
     currency: string,
     fundingKey: PublicKey | PublicKey[],
-    blindCoinKeys: PublicKey[],
+    blindCoinKeys: PublicKey[][],
     wipeDate?: string
   ) {
     this.acknowledgementKey = acknowledgementKey;
@@ -31,7 +31,7 @@ export default class CustodianInfo {
       Buffutils.fromUint32(this.currency.length),
       Buffutils.fromString(this.currency),
       ...(this.fundingKey instanceof Array ? this.fundingKey.map(bk => bk.buffer) : [this.fundingKey.buffer]), // can we spread like this?
-      ...this.blindCoinKeys.map(bk => bk.buffer),
+      ...([] as Uint8Array[]).concat(...this.blindCoinKeys.map(bk => bk.map(a => a.buffer))),
       Buffutils.fromString(this.wipeDate ? this.wipeDate : '')
     );
   }
@@ -47,12 +47,13 @@ export default class CustodianInfo {
     );
   }
 
+  // wipeDate now functions as a sort of genesis date
   toPOD(): POD.CustodianInfo {
     return {
       acknowledgementKey: this.acknowledgementKey.toPOD(),
       currency: this.currency,
       fundingKey: this.fundingKey instanceof Array ? this.fundingKey.map(fk => fk.toPOD()) : this.fundingKey.toPOD(),
-      blindCoinKeys: this.blindCoinKeys.map(bk => bk.toPOD()),
+      blindCoinKeys: this.blindCoinKeys.map(bk => bk.map(k => k.toPOD())),
       wipeDate: this.wipeDate,
     };
   }
@@ -90,17 +91,26 @@ export default class CustodianInfo {
       fundingKey.push(fk);
     }
 
-    if (!Array.isArray(d.blindCoinKeys) || d.blindCoinKeys.length !== 31) {
-      return new Error('custodian expected an 31-length array for blindCoinKeys');
+    if (!Array.isArray(d.blindCoinKeys)) {
+      return new Error('needs to be an array');
     }
     const blindCoinKeys = [];
-    for (const bkstr of d.blindCoinKeys) {
-      const bk = PublicKey.fromPOD(bkstr);
-      if (bk instanceof Error) {
-        return bk;
+    for (let index = 0; index < d.blindCoinKeys.length; index++) {
+      const arr = d.blindCoinKeys[index];
+      
+      if (!Array.isArray(arr) || arr.length !== 31) {
+        return new Error('custodian expected an 31-length array for blindCoinKeys');
       }
-
-      blindCoinKeys.push(bk);
+      const bks = [];
+      for (const bkstr of arr) {
+        const bk = PublicKey.fromPOD(bkstr);
+        if (bk instanceof Error) {
+          return bk;
+        }
+  
+        bks.push(bk);
+      }
+      blindCoinKeys.push(bks);
     }
 
     // doesn't force a type..

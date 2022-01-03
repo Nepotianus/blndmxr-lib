@@ -22,7 +22,13 @@ export default class Coin {
       return receipt;
     }
 
-    const c = new Coin(owner, magnitude, receipt);
+    const period = data.period;
+    if (!POD.isAmount(data.period)) {
+      return new Error('Coin.fromPOD invalid number');
+    }
+
+
+   const c = new Coin(owner, magnitude, receipt, period);
 
     if (c.hash().toPOD() !== data.hash) {
       return new Error('hash did not match');
@@ -34,15 +40,17 @@ export default class Coin {
   public owner: PublicKey;
   public magnitude: Magnitude;
   public receipt: Signature;
+  public period: number;
 
-  constructor(owner: PublicKey, magnitude: Magnitude, receipt: Signature) {
+  constructor(owner: PublicKey, magnitude: Magnitude, receipt: Signature, period: number) {
     this.owner = owner;
     this.magnitude = magnitude;
     this.receipt = receipt;
+    this.period = period;
   }
 
   get buffer() {
-    return Buffutils.concat(this.owner.buffer, this.magnitude.buffer, this.receipt.buffer);
+    return Buffutils.concat(this.owner.buffer, this.magnitude.buffer, this.receipt.buffer, Buffutils.fromUint64(this.period));
   }
 
   public hash() {
@@ -55,6 +63,7 @@ export default class Coin {
       receipt: this.receipt.toPOD(),
       magnitude: this.magnitude.toPOD(),
       owner: this.owner.toPOD(),
+      period: this.period
     };
   }
 

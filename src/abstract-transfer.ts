@@ -12,18 +12,18 @@ export default abstract class AbstractTransfer implements AbstractClaimable {
   amount: number;
   inputs: Coin[];
   fee: number;
-
+  decay: number; // this is not checked by primitives, custodian should verify like fee and auth of coin
   authorization?: Signature;
   initCreated?: number;
 
   abstract kind: 'LightningPayment' | 'FeeBump' | 'Hookout';
 
-  constructor({ amount, authorization, fee, inputs, initCreated }: TransferData) {
+  constructor({ amount, authorization, fee, decay, inputs, initCreated }: TransferData) {
     this.amount = amount;
     this.authorization = authorization;
     this.fee = fee;
+    this.decay = decay;
     this.initCreated = initCreated;
-
     assert(isHashSorted(inputs));
     this.inputs = inputs;
   }
@@ -41,6 +41,7 @@ export default abstract class AbstractTransfer implements AbstractClaimable {
       'Transfer',
       buffutils.fromUint64(td.amount),
       buffutils.fromUint64(td.fee),
+      buffutils.fromUint64(td.decay),
       buffutils.fromUint64(td.inputs.length),
       ...td.inputs.map(i => i.buffer)
     );
@@ -55,13 +56,14 @@ export default abstract class AbstractTransfer implements AbstractClaimable {
       authorization: this.authorization ? this.authorization.toPOD() : null,
       claimant: this.claimant.toPOD(),
       fee: this.fee,
+      decay: this.decay,
       inputs: this.inputs.map(i => i.toPOD()),
       initCreated: this.initCreated,
     };
   }
 
   get claimableAmount() {
-    return this.inputAmount() - this.amount - this.fee;
+    return this.inputAmount() - this.amount - this.fee - this.decay;
   }
 
   inputAmount(): number {
@@ -113,6 +115,11 @@ export function parseTransferData(data: any): TransferData | Error {
     return new Error('Transfer.fromPOD invalid fee');
   }
 
+  const decay = data.decay;
+  if (!POD.isAmount(decay)) {
+      return new Error('Transfer.fromPOD invalid decay');
+  }
+
   let inputAmount = 0;
   const inputs: Coin[] = [];
   for (const i of data.inputs) {
@@ -127,8 +134,8 @@ export function parseTransferData(data: any): TransferData | Error {
     return new Error('inputs are not in sorted order');
   }
 
-  if (inputAmount < amount + fee) {
-    return new Error('not sourcing enough input for amount and fee');
+  if (inputAmount < amount + fee + decay) {
+    return new Error('not sourcing enough input for amount and fee and decay');
   }
 
   const initCreated = data.initCreated;
@@ -138,13 +145,14 @@ export function parseTransferData(data: any): TransferData | Error {
     }
   }
 
-  return { amount, authorization, fee, inputs, initCreated };
+  return { amount, authorization, fee, decay, inputs, initCreated };
 }
 
 export interface TransferData {
   amount: number;
   authorization?: Signature;
   fee: number;
+  decay: number;
   inputs: Coin[];
   initCreated?: number;
 }
