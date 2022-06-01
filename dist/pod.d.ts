@@ -8,6 +8,17 @@ export declare const MaxMagnitude = 30;
 export interface Acknowledged {
     acknowledgement: Signature;
 }
+export interface SwapProvider {
+    multiAddr: string;
+    peerId: string;
+    testnet: boolean;
+    price: number;
+    minSwapAmount: number;
+    maxSwapAmount: number;
+    age: number;
+    uptime: number;
+    relevancy: number;
+}
 export interface CustodianInfo {
     acknowledgementKey: PublicKey;
     currency: string;
