@@ -4,8 +4,8 @@ export declare type Signature = {
     s: bigint;
 };
 export declare const Signature: {
-    fromBytes(buf: Uint8Array): Error | Signature;
-    fromHex(hex: string): Error | Signature;
+    fromBytes(buf: Uint8Array): Signature | Error;
+    fromHex(hex: string): Signature | Error;
     toBytes({ r, s }: Signature): Uint8Array;
     toHex(sig: Signature): string;
 };

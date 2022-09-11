@@ -4,8 +4,9 @@ import LightningPayment from './lightning-payment';
 import LightningInvoice from './lightning-invoice';
 import Hookin from './hookin';
 import { POD } from '.';
+import Referral from './referral';
 
-export type Claimable = Hookout | FeeBump | LightningPayment | LightningInvoice | Hookin;
+export type Claimable = Hookout | FeeBump | LightningPayment | LightningInvoice | Hookin | Referral;
 
 export function claimableToPOD(c: Claimable): POD.Claimable {
   if (c instanceof Hookout) {
@@ -18,6 +19,8 @@ export function claimableToPOD(c: Claimable): POD.Claimable {
     return { kind: 'LightningInvoice' as 'LightningInvoice', ...c.toPOD() };
   } else if (c instanceof Hookin) {
     return { kind: 'Hookin' as 'Hookin', ...c.toPOD() };
+  } else if (c instanceof Referral) {
+    return { kind: 'Referral' as 'Referral', ...c.toPOD() };
   } else {
     const _: never = c;
     throw new Error('unknown claimable kind');
@@ -59,6 +62,8 @@ export function parserFromKind(kind: string) {
       return LightningInvoice.fromPOD;
     case 'Hookin':
       return Hookin.fromPOD;
+    case 'Referral':
+      return Referral.fromPOD;
   }
 }
 

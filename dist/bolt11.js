@@ -1,15 +1,32 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.encodeBolt11 = exports.millisatToHrp = exports.satToHrp = exports.decodeBolt11 = exports.hrpToSat = exports.hrpToMillisat = void 0;
 const public_key_1 = __importDefault(require("./public-key"));
 const bech32 = __importStar(require("./util/bech32"));
 const buffutils = __importStar(require("./util/buffutils"));
@@ -98,7 +115,7 @@ const TAGPARSERS = new Map([
     [6, wordsToIntBE],
     [24, wordsToIntBE],
     [9, fallbackAddressParser],
-    [3, routingInfoParser],
+    [3, routingInfoParser], // for extra routing info (private etc.)
 ]);
 function getUnknownParser(tagCode) {
     return (words) => ({
@@ -114,13 +131,13 @@ function fallbackAddressParser(words, network) {
     let address = null;
     switch (version) {
         case 17:
-            address = bitcoin_address_1.toBase58Check(addressHash, network.pubKeyHash);
+            address = (0, bitcoin_address_1.toBase58Check)(addressHash, network.pubKeyHash);
             break;
         case 18:
-            address = bitcoin_address_1.toBase58Check(addressHash, network.scriptHash);
+            address = (0, bitcoin_address_1.toBase58Check)(addressHash, network.scriptHash);
             break;
         case 0:
-            address = bitcoin_address_1.toBech32(addressHash, version, network.bech32);
+            address = (0, bitcoin_address_1.toBech32)(addressHash, version, network.bech32);
             break;
         default:
             throw new Error('unknown version: ' + version);
@@ -169,7 +186,7 @@ const TAGCODES = {
     expire_time: 6,
     min_final_cltv_expiry: 24,
     fallback_address: 9,
-    routing_info: 3,
+    routing_info: 3, // for extra routing info (private etc.)
 };
 // reverse the keys and values of TAGCODES and insert into TAGNAMES
 const TAGNAMES = new Map();
@@ -249,7 +266,7 @@ function decodeBolt11(paymentRequest) {
     try {
         decoded = bech32.decode(paymentRequest);
     }
-    catch (err) {
+    catch (err) { // I think this is always Error instance already?
         if (!(err instanceof Error)) {
             err = new Error(err);
         }
@@ -326,7 +343,7 @@ function decodeBolt11(paymentRequest) {
         // See: parsers for more comments
         tags.push({
             tagName,
-            data: parser(tagWords, coinNetwork),
+            data: parser(tagWords, coinNetwork), // only fallback address needs coinNetwork
         });
     }
     let timeExpireDate, timeExpireDateString;
@@ -344,7 +361,7 @@ function decodeBolt11(paymentRequest) {
     if (sig instanceof Error) {
         return sig;
     }
-    let sigPubkeyPoint = signature_1.ecdsaRecover(payReqHash, sig, recoveryFlag);
+    let sigPubkeyPoint = (0, signature_1.ecdsaRecover)(payReqHash, sig, recoveryFlag);
     let payeeNodeKey = buffutils.toHex(new public_key_1.default(sigPubkeyPoint.x, sigPubkeyPoint.y).buffer);
     const payee = tagsItems(tags, isDefined(TAGNAMES.get(19)));
     if (payee && payee !== payeeNodeKey) {
@@ -370,6 +387,7 @@ function decodeBolt11(paymentRequest) {
     return orderKeys(finalResult);
 }
 exports.decodeBolt11 = decodeBolt11;
+// TODO
 function orderKeys(unorderedObj) {
     let orderedObj = {};
     Object.keys(unorderedObj)
@@ -429,7 +447,7 @@ const TAGENCODERS = {
     expire_time: intBEToWords,
     min_final_cltv_expiry: intBEToWords,
     fallback_address: fallbackAddressEncoder,
-    routing_info: routingInfoEncoder,
+    routing_info: routingInfoEncoder, // for extra routing info (private etc.)
 };
 function hexToWord(hex) {
     let buffer = buffutils.fromHex(hex);
@@ -759,7 +777,7 @@ function encodeBolt11(paymentRequest) {
             if (sig instanceof Error) {
                 throw new Error('expected signature to be valid hex');
             }
-            let recoveredPubkey = ecc.Point.toBytes(signature_1.ecdsaRecover(payReqHash, sig, data.recoveryFlag));
+            let recoveredPubkey = ecc.Point.toBytes((0, signature_1.ecdsaRecover)(payReqHash, sig, data.recoveryFlag));
             if (nodePublicKey && !buffutils.equal(nodePublicKey, recoveredPubkey)) {
                 throw new Error('Signature, message, and recoveryID did not produce the same pubkey as payeeNodeKey');
             }

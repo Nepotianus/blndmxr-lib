@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.check = exports.is = exports.equal = void 0;
 function default_1(x) {
     if (!x) {
         throw new Error('assertion failed');

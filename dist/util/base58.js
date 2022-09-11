@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.decode = exports.decodeUnsafe = exports.encode = void 0;
 const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 if (ALPHABET.length >= 255) {
     throw new TypeError('Alphabet too long');

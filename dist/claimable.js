@@ -3,11 +3,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.parserFromKind = exports.claimableFromPOD = exports.claimableToPOD = void 0;
 const hookout_1 = __importDefault(require("./hookout"));
 const fee_bump_1 = __importDefault(require("./fee-bump"));
 const lightning_payment_1 = __importDefault(require("./lightning-payment"));
 const lightning_invoice_1 = __importDefault(require("./lightning-invoice"));
 const hookin_1 = __importDefault(require("./hookin"));
+const referral_1 = __importDefault(require("./referral"));
 function claimableToPOD(c) {
     if (c instanceof hookout_1.default) {
         return { kind: 'Hookout', ...c.toPOD() };
@@ -23,6 +25,9 @@ function claimableToPOD(c) {
     }
     else if (c instanceof hookin_1.default) {
         return { kind: 'Hookin', ...c.toPOD() };
+    }
+    else if (c instanceof referral_1.default) {
+        return { kind: 'Referral', ...c.toPOD() };
     }
     else {
         const _ = c;
@@ -63,6 +68,8 @@ function parserFromKind(kind) {
             return lightning_invoice_1.default.fromPOD;
         case 'Hookin':
             return hookin_1.default.fromPOD;
+        case 'Referral':
+            return referral_1.default.fromPOD;
     }
 }
 exports.parserFromKind = parserFromKind;

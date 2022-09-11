@@ -8,6 +8,7 @@ import _FeeBump from './fee-bump';
 import _LightningPayment from './lightning-payment';
 import _LightningInvoice from './lightning-invoice';
 import _Hookin from './hookin';
+import _Referral from './referral';
 import { Claimable as _Claimable } from './claimable';
 import { Status as _Status } from './status';
 interface Acknowledgable {
@@ -25,6 +26,8 @@ export default class Acknowledged<T extends Acknowledgable, P> {
 }
 export declare type Hookin = Acknowledged<_Hookin, POD.Hookin>;
 export declare function hookinFromPod(x: any): Hookin | Error;
+export declare type Referral = Acknowledged<_Referral, POD.Referral>;
+export declare function referralFromPod(x: any): Referral | Error;
 export declare type FeeBump = Acknowledged<_FeeBump, POD.FeeBump>;
 export declare function feeBumpFromPod(x: any): FeeBump | Error;
 export declare type LightningPayment = Acknowledged<_LightningPayment, POD.LightningPayment>;

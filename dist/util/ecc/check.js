@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.isValidPubkey = exports.isValidSignature = exports.isValidPrivkey = exports.privkeysAreUnique = exports.check = exports.CheckError = void 0;
 const _1 = require(".");
 // This module exposes functions that:
 //

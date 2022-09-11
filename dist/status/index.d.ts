@@ -25,7 +25,7 @@ export declare function statusToPOD(s: Status): {
     claimableHash: string;
     kind: "InvoiceSettled";
 } | {
-    claimRequest: import("../pod").ClaimRequest;
+    claimRequest: import("blindmixer-lib/src/pod").ClaimRequest;
     blindedReceipts: string[];
     hash: string;
     claimableHash: string;

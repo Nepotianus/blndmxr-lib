@@ -304,7 +304,7 @@ export function decodeBolt11(paymentRequest: string): PaymentRequestObject | Err
   let decoded;
   try {
     decoded = bech32.decode(paymentRequest);
-  } catch (err) {
+  } catch (err: any) { // I think this is always Error instance already?
     if (!(err instanceof Error)) {
       err = new Error(err);
     }
@@ -442,12 +442,13 @@ export function decodeBolt11(paymentRequest: string): PaymentRequestObject | Err
   return orderKeys(finalResult);
 }
 
+// TODO
 function orderKeys<T extends any>(unorderedObj: T): T {
   let orderedObj: any = {};
-  Object.keys(unorderedObj)
+  Object.keys(unorderedObj as any)
     .sort()
     .forEach(key => {
-      orderedObj[key] = unorderedObj[key];
+      orderedObj[key] = (unorderedObj as any)[key];
     });
   return orderedObj;
 }

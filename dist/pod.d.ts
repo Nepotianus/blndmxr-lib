@@ -54,6 +54,14 @@ export interface Hookin {
     amount: number;
     claimant: string;
     bitcoinAddress: string;
+    referral?: string;
+    initCreated?: number;
+}
+export interface Referral {
+    hash: string;
+    amount: number;
+    claimant: string;
+    claimableHash: string;
     initCreated?: number;
 }
 export interface AbstractTransfer {
@@ -90,6 +98,8 @@ export declare type Claimable = ({
 } & Hookout) | ({
     kind: 'Hookin';
 } & Hookin) | ({
+    kind: 'Referral';
+} & Referral) | ({
     kind: 'FeeBump';
 } & FeeBump) | ({
     kind: 'LightningPayment';

@@ -1,13 +1,29 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const assert_1 = __importDefault(require("../assert"));
@@ -90,6 +106,10 @@ const K = new Uint32Array([
  * SHA256
  */
 class SHA256 {
+    state;
+    msg;
+    block;
+    size;
     constructor() {
         this.state = new Uint32Array(8);
         this.msg = new Uint32Array(64);
@@ -117,7 +137,7 @@ class SHA256 {
         return this._final(new Uint8Array(32));
     }
     _update(data, len) {
-        assert_1.default(this.size !== FINALIZED);
+        (0, assert_1.default)(this.size !== FINALIZED);
         let pos = this.size & 0x3f;
         let off = 0;
         this.size += len;
@@ -143,7 +163,7 @@ class SHA256 {
         }
     }
     _final(out) {
-        assert_1.default(this.size !== FINALIZED);
+        (0, assert_1.default)(this.size !== FINALIZED);
         const pos = this.size % 64;
         const len = this.size * 8;
         writeU32(DESC, len * (1 / 0x100000000), 0);

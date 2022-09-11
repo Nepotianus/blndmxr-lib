@@ -5,6 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const assert_1 = __importDefault(require("../assert"));
 class HMAC {
+    hash;
+    size;
+    inner;
+    outer;
     constructor(Hash, size, x = [], y = []) {
         this.hash = Hash;
         this.size = size;
@@ -18,7 +22,7 @@ class HMAC {
             h.init();
             h.update(key);
             key = h.final();
-            assert_1.default(key.length <= this.size);
+            (0, assert_1.default)(key.length <= this.size);
         }
         // Pad key
         const pad = new Uint8Array(this.size);

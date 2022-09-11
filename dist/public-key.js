@@ -1,13 +1,29 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const hash_1 = __importDefault(require("./hash"));
@@ -20,11 +36,6 @@ const mu_sig_1 = require("./util/ecc/mu-sig");
 const base58_1 = require("./util/base58");
 const serializedPrefix = 'pubmp'; // public key blindmixer
 class PublicKey {
-    // dont directly use...
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
     static fromPOD(data) {
         if (typeof data !== 'string') {
             return new Error('PublicKey.fromPOD expected a string');
@@ -43,11 +54,18 @@ class PublicKey {
         return new PublicKey(point.x, point.y);
     }
     static combine(pubkeys) {
-        const t = mu_sig_1.pubkeyCombine(pubkeys);
+        const t = (0, mu_sig_1.pubkeyCombine)(pubkeys);
         return new PublicKey(t.x, t.y);
     }
+    x;
+    y;
     get buffer() {
         return ecc.Point.toBytes(this);
+    }
+    // dont directly use...
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
     }
     toPOD() {
         return bech32.encode(serializedPrefix, bech32.toWords(this.buffer));
@@ -116,7 +134,7 @@ class PublicKey {
         const sha2 = sha256_1.default.digest(sha256_1.default.digest(addbytes)).slice(0, 4);
         // const checksum = sha2.slice(0, 4)
         const binary = buffutils.concat(addbytes, sha2);
-        return base58_1.encode(binary);
+        return (0, base58_1.encode)(binary);
     }
     toLegacyBitcoinAddress(testnet = false) {
         const prefix = testnet ? 0x6f : 0x00;
@@ -124,7 +142,7 @@ class PublicKey {
         const concatVersion = buffutils.concat(new Uint8Array([prefix]), hash);
         const sha = sha256_1.default.digest(sha256_1.default.digest(concatVersion)).slice(0, 4);
         const enc = buffutils.concat(concatVersion, sha);
-        return base58_1.encode(enc);
+        return (0, base58_1.encode)(enc);
     }
 }
 exports.default = PublicKey;

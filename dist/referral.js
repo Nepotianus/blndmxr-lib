@@ -27,22 +27,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const hash_1 = __importDefault(require("./hash"));
-const private_key_1 = __importDefault(require("./private-key"));
 const public_key_1 = __importDefault(require("./public-key"));
 const POD = __importStar(require("./pod"));
 const buffutils = __importStar(require("./util/buffutils"));
-class Hookin {
+class Referral {
     static fromPOD(data) {
         if (typeof data !== 'object') {
-            return new Error('hookin expected an object');
-        }
-        const txid = buffutils.fromHex(data.txid, 32);
-        if (txid instanceof Error) {
-            return txid;
-        }
-        const vout = data.vout;
-        if (!Number.isSafeInteger(vout) || vout < 0 || vout > 65536) {
-            return new Error('hookin was given an invalid vout');
+            return new Error('referral expected an object');
         }
         const amount = data.amount;
         if (!POD.isAmount(amount)) {
@@ -52,19 +43,9 @@ class Hookin {
         if (claimant instanceof Error) {
             return claimant;
         }
-        const bitcoinAddress = data.bitcoinAddress;
-        if (typeof bitcoinAddress !== 'string') {
-            return new Error('hookin expected a bitcoin address');
-        }
-        let referral = data.referral;
-        if (referral) {
-            if (typeof referral != 'string') {
-                throw referral;
-            }
-            referral = public_key_1.default.fromPOD(referral);
-            if (referral instanceof Error) {
-                return referral;
-            }
+        const claimableHash = hash_1.default.fromPOD(data.claimableHash);
+        if (claimableHash instanceof Error) {
+            return claimableHash;
         }
         const initCreated = data.initCreated;
         if (initCreated) {
@@ -72,66 +53,45 @@ class Hookin {
                 throw initCreated;
             }
         }
-        return new Hookin(txid, vout, amount, claimant, bitcoinAddress, referral, initCreated);
+        return new Referral(amount, claimant, claimableHash, initCreated);
     }
-    static hashOf(txid, vout, amount, claimant, bitcoinAddress, referral) {
-        const b = hash_1.default.newBuilder('Hookin');
-        b.update(txid);
-        b.update(buffutils.fromUint32(vout));
+    // this is the "old" way of building hashes?
+    static hashOf(amount, claimant, claimableHash) {
+        const b = hash_1.default.newBuilder('Referral');
         b.update(buffutils.fromUint64(amount));
         b.update(claimant.buffer);
-        b.update(buffutils.fromString(bitcoinAddress));
-        if (referral) {
-            b.update(referral.buffer);
-        }
+        b.update(claimableHash.buffer);
         return b.digest();
     }
-    txid;
-    vout;
     amount;
     claimant;
-    bitcoinAddress;
-    referral;
+    claimableHash;
     initCreated;
-    constructor(txid, vout, amount, claimant, bitcoinAddress, referral, initCreated) {
-        this.txid = txid;
-        this.vout = vout;
+    constructor(amount, claimant, claimableHash, initCreated) {
         this.amount = amount;
         this.claimant = claimant;
-        this.bitcoinAddress = bitcoinAddress;
-        this.referral = referral;
+        this.claimableHash = claimableHash;
         this.initCreated = initCreated;
     }
     hash() {
-        return Hookin.hashOf(this.txid, this.vout, this.amount, this.claimant, this.bitcoinAddress, this.referral);
+        return Referral.hashOf(this.amount, this.claimant, this.claimableHash);
     }
     get kind() {
-        return 'Hookin';
+        return 'Referral';
     }
     get claimableAmount() {
-        // a hookin by itself has no claimable value, it's only after we have some status updates for it being sufficiently confirmed
-        return 0;
-    }
-    getTweak() {
-        const bytes = hash_1.default.fromMessage('tweak', this.claimant.buffer).buffer;
-        const pk = private_key_1.default.fromBytes(bytes);
-        if (pk instanceof Error) {
-            throw pk;
-        }
-        return pk;
+        // just this.amount as it is only inserted upon accepting a hookin.
+        return this.amount;
     }
     toPOD() {
         return {
             hash: this.hash().toPOD(),
             amount: this.amount,
             claimant: this.claimant.toPOD(),
-            txid: buffutils.toHex(this.txid),
-            vout: this.vout,
-            bitcoinAddress: this.bitcoinAddress,
-            referral: this.referral ? this.referral.toPOD() : undefined,
+            claimableHash: this.claimableHash.toPOD(),
             initCreated: this.initCreated,
         };
     }
 }
-exports.default = Hookin;
-//# sourceMappingURL=hookin.js.map
+exports.default = Referral;
+//# sourceMappingURL=referral.js.map

@@ -1,12 +1,29 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ecdsaRecover = exports.verifyECDSA = exports.verifyBip340 = exports.verify = exports.sign = exports.Signature = void 0;
 const check = __importStar(require("./check"));
 const elliptic_1 = require("./elliptic");
 const util_1 = require("./util");
@@ -15,23 +32,23 @@ exports.Signature = {
         if (buf.length !== 64) {
             return new Error('signature buf expected 64 bytes');
         }
-        const r = util_1.bufferToBigInt(buf.slice(0, 32));
-        const s = util_1.bufferToBigInt(buf.slice(32, 64));
+        const r = (0, util_1.bufferToBigInt)(buf.slice(0, 32));
+        const s = (0, util_1.bufferToBigInt)(buf.slice(32, 64));
         // TODO: checkSignature here or just let bad sigs fail in verify()?
         return { r, s };
     },
     fromHex(hex) {
-        const buff = util_1.bufferFromHex(hex);
+        const buff = (0, util_1.bufferFromHex)(hex);
         if (buff instanceof Error) {
             return buff;
         }
         return exports.Signature.fromBytes(buff);
     },
     toBytes({ r, s }) {
-        return util_1.concatBuffers(util_1.buffer32FromBigInt(r), util_1.buffer32FromBigInt(s));
+        return (0, util_1.concatBuffers)((0, util_1.buffer32FromBigInt)(r), (0, util_1.buffer32FromBigInt)(s));
     },
     toHex(sig) {
-        return util_1.bufferToHex(exports.Signature.toBytes(sig));
+        return (0, util_1.bufferToHex)(exports.Signature.toBytes(sig));
     },
 };
 function sign(message, privkey) {
@@ -40,10 +57,10 @@ function sign(message, privkey) {
     }
     const m = message;
     const d = privkey;
-    const k0 = util_1.getK0(d, m);
-    const R = elliptic_1.pointMultiply(util_1.curve.g, k0);
-    const k = util_1.getK(R, k0); // nonce
-    const e = util_1.getE(R.x, elliptic_1.Point.fromPrivKey(d), m); // challenge
+    const k0 = (0, util_1.getK0)(d, m);
+    const R = (0, elliptic_1.pointMultiply)(util_1.curve.g, k0);
+    const k = (0, util_1.getK)(R, k0); // nonce
+    const e = (0, util_1.getE)(R.x, elliptic_1.Point.fromPrivKey(d), m); // challenge
     const s = (k + e * d) % util_1.curve.n;
     const sig = { r: R.x, s };
     if (!check.isValidSignature(sig)) {
@@ -61,12 +78,12 @@ function verify(pubkey, message, sig) {
     }
     const m = message;
     const P = pubkey;
-    const e = util_1.getE(sig.r, P, m);
-    const R = elliptic_1.pointSubtract(elliptic_1.pointMultiply(util_1.curve.g, sig.s), elliptic_1.pointMultiply(P, e));
+    const e = (0, util_1.getE)(sig.r, P, m);
+    const R = (0, elliptic_1.pointSubtract)((0, elliptic_1.pointMultiply)(util_1.curve.g, sig.s), (0, elliptic_1.pointMultiply)(P, e));
     if (R === elliptic_1.INFINITE_POINT) {
         return false;
     }
-    else if (util_1.jacobi(R.y) !== BigInt(1)) {
+    else if ((0, util_1.jacobi)(R.y) !== BigInt(1)) {
         return false;
     }
     else if (R.x !== sig.r) {
@@ -85,13 +102,13 @@ function verifyBip340(pubkey, message, sig) {
         throw new Error('invalid sig');
     }
     const m = message;
-    const P = util_1.isEven(pubkey.y) ? pubkey : elliptic_1.negatePoint(pubkey);
-    const e = util_1.standardGetEBIP340(sig.r, P.x, m);
-    const R = elliptic_1.pointSubtract(elliptic_1.pointMultiply(util_1.curve.g, sig.s), elliptic_1.pointMultiply(P, e));
+    const P = (0, util_1.isEven)(pubkey.y) ? pubkey : (0, elliptic_1.negatePoint)(pubkey);
+    const e = (0, util_1.standardGetEBIP340)(sig.r, P.x, m);
+    const R = (0, elliptic_1.pointSubtract)((0, elliptic_1.pointMultiply)(util_1.curve.g, sig.s), (0, elliptic_1.pointMultiply)(P, e));
     if (R === elliptic_1.INFINITE_POINT) {
         return false;
     }
-    else if (!util_1.isEven(R.y)) {
+    else if (!(0, util_1.isEven)(R.y)) {
         return false;
     }
     else if (R.x !== sig.r) {
@@ -115,11 +132,11 @@ function verifyECDSA(pubkey, message, sig) {
     if (e instanceof Error) {
         throw new Error('invalid e scalar');
     }
-    const sInv = util_1.modInverse(sig.s, util_1.curve.n);
-    const u1 = util_1.mod(e * sInv, util_1.curve.n);
-    const u2 = util_1.mod(sig.r * sInv, util_1.curve.n);
-    const S = elliptic_1.pointAdd(elliptic_1.pointMultiply(util_1.curve.g, u1), elliptic_1.pointMultiply(P, u2));
-    const V = util_1.mod(S.x, util_1.curve.n);
+    const sInv = (0, util_1.modInverse)(sig.s, util_1.curve.n);
+    const u1 = (0, util_1.mod)(e * sInv, util_1.curve.n);
+    const u2 = (0, util_1.mod)(sig.r * sInv, util_1.curve.n);
+    const S = (0, elliptic_1.pointAdd)((0, elliptic_1.pointMultiply)(util_1.curve.g, u1), (0, elliptic_1.pointMultiply)(P, u2));
+    const V = (0, util_1.mod)(S.x, util_1.curve.n);
     if (S === elliptic_1.INFINITE_POINT) {
         return false;
     }
@@ -161,15 +178,15 @@ function ecdsaRecover(message, sig, j) {
     if (r2 instanceof Error) {
         throw r2;
     }
-    let rInv = util_1.modInverse(sig.r, util_1.curve.n);
+    let rInv = (0, util_1.modInverse)(sig.r, util_1.curve.n);
     //var s1 = n.sub(e).mul(rInv).umod(n);
-    let s1 = util_1.mod((util_1.curve.n - e) * rInv, util_1.curve.n);
+    let s1 = (0, util_1.mod)((util_1.curve.n - e) * rInv, util_1.curve.n);
     // var s2 = s.mul(rInv).umod(n);
-    let s2 = util_1.mod(sig.s * rInv, util_1.curve.n);
+    let s2 = (0, util_1.mod)(sig.s * rInv, util_1.curve.n);
     // 1.6.1 Compute Q = r^-1 (sR -  eG)
     //               Q = r^-1 (sR + -eG)
     // return this.g.mulAdd(s1, r, s2);
-    return elliptic_1.pointAdd(elliptic_1.pointMultiply(util_1.curve.g, s1), elliptic_1.pointMultiply(r2, s2));
+    return (0, elliptic_1.pointAdd)((0, elliptic_1.pointMultiply)(util_1.curve.g, s1), (0, elliptic_1.pointMultiply)(r2, s2));
 }
 exports.ecdsaRecover = ecdsaRecover;
 //# sourceMappingURL=signature.js.map

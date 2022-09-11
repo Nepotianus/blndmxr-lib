@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.standardGetEBIP340 = exports.getE = exports.getK0 = exports.getK = exports.jacobi = exports.isPointOnCurve = exports.utf8ToBuffer = exports.constantTimeBufferEquals = exports.isEven = exports.pointToBuffer = exports.pointFromX = exports.pointFromBuffer = exports.concatBuffers = exports.buffer32FromBigInt = exports.bufferToBigInt = exports.bufferFromHex = exports.bufferToHex = exports.bigintToHex = exports.modInverse = exports.powmod = exports.mod = exports.curve = void 0;
 const assert_1 = __importDefault(require("../assert"));
 const sha256_1 = __importDefault(require("../bcrypto/sha256"));
 const check_1 = require("./check");
@@ -14,10 +15,10 @@ exports.curve = {
     p: BigInt('115792089237316195423570985008687907853269984665640564039457584007908834671663'),
     g: {
         x: BigInt('55066263022277343669578718895168534326250603453777594175500187360389116729240'),
-        y: BigInt('32670510020758816978083085130507043184471273380659243275938904335757337482424'),
+        y: BigInt('32670510020758816978083085130507043184471273380659243275938904335757337482424'), // 0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8n
     },
     // order
-    n: BigInt('115792089237316195423570985008687907852837564279074904382605163141518161494337'),
+    n: BigInt('115792089237316195423570985008687907852837564279074904382605163141518161494337'), // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n,
 };
 // Handles negative quotients.
 //
@@ -54,7 +55,7 @@ function modInverse(a, m) {
     }
     // At this point, d is the GCD, and ud*a+vd*m = d.
     // If d == 1, this means that ud is a inverse.
-    assert_1.default(d === BigInt(1));
+    (0, assert_1.default)(d === BigInt(1));
     if (ud > 0) {
         return ud;
     }
@@ -95,7 +96,8 @@ function bigIntSqrt(n) {
 //   }
 //   return out;
 // }
-exports.bigintToHex = (n) => n.toString(16).padStart(64, '0');
+const bigintToHex = (n) => n.toString(16).padStart(64, '0');
+exports.bigintToHex = bigintToHex;
 function bufferToHex(buf) {
     let result = '';
     for (const b of buf) {
@@ -153,7 +155,7 @@ exports.buffer32FromBigInt = buffer32FromBigInt;
 function concatBuffers(...bufs) {
     let totalSize = 0;
     for (const buf of bufs) {
-        assert_1.default(buf instanceof Uint8Array);
+        (0, assert_1.default)(buf instanceof Uint8Array);
         totalSize += buf.length;
     }
     const res = new Uint8Array(totalSize);
@@ -191,7 +193,7 @@ function pointFromX(x, isOdd) {
     }
     const y = (y0 & BigInt(1)) !== isOdd ? p - y0 : y0;
     const point = { x, y };
-    assert_1.default(check_1.isValidPubkey(point));
+    (0, assert_1.default)((0, check_1.isValidPubkey)(point));
     return point;
 }
 exports.pointFromX = pointFromX;
@@ -200,7 +202,7 @@ function pointToBuffer(point) {
     // 0x03: y is odd
     const b0 = point.y % BigInt(2) === BigInt(0) ? 0x02 : 0x03;
     const xbuf = buffer32FromBigInt(point.x);
-    assert_1.default(xbuf.length === 32);
+    (0, assert_1.default)(xbuf.length === 32);
     const result = new Uint8Array(33);
     result.set([b0], 0);
     result.set(xbuf, 1);
@@ -254,7 +256,7 @@ function getE(Rx, P, m) {
 }
 exports.getE = getE;
 function standardGetEBIP340(Rx, Px, m) {
-    const tag = sha256_1.default.digest(buffutils_1.fromString('BIP0340/challenge'));
+    const tag = sha256_1.default.digest((0, buffutils_1.fromString)('BIP0340/challenge'));
     return (bufferToBigInt(sha256_1.default.digest(concatBuffers(tag, tag, buffer32FromBigInt(Rx), buffer32FromBigInt(Px), m))) % exports.curve.n);
 }
 exports.standardGetEBIP340 = standardGetEBIP340;

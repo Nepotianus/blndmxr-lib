@@ -33,6 +33,9 @@ export { LightningPayment };
 import FeeBump from './fee-bump';
 export { FeeBump };
 
+import Referral from './referral';
+export { Referral };
+
 export { default as Magnitude } from './magnitude';
 
 export { default as AbstractTransfer } from './abstract-transfer';

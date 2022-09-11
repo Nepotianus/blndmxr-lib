@@ -62,6 +62,15 @@ export interface Hookin {
   amount: number;
   claimant: string;
   bitcoinAddress: string;
+  referral?: string;
+  initCreated?: number;
+}
+
+export interface Referral {
+  hash: string;
+  amount: number;
+  claimant: string;
+  claimableHash: string;
   initCreated?: number;
 }
 
@@ -102,6 +111,7 @@ export interface LightningInvoice {
 export type Claimable =
   | ({ kind: 'Hookout' } & Hookout)
   | ({ kind: 'Hookin' } & Hookin)
+  | ({ kind: 'Referral' } & Referral)
   | ({ kind: 'FeeBump' } & FeeBump)
   | ({ kind: 'LightningPayment' } & LightningPayment)
   | ({ kind: 'LightningInvoice' } & LightningInvoice);

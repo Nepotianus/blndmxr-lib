@@ -18,7 +18,7 @@ export default class LightningPayment extends AbstractTransfer {
     try {
       return new LightningPayment(transferData, data.paymentRequest);
     } catch (err) {
-      return new Error(err);
+      return new Error(err as string);
     }
   }
 

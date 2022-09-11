@@ -10,6 +10,7 @@ import _FeeBump from './fee-bump';
 import _LightningPayment from './lightning-payment';
 import _LightningInvoice from './lightning-invoice';
 import _Hookin from './hookin';
+import _Referral from './referral';
 import { Claimable as _Claimable, claimableFromPOD as _claimableFromPOD, claimableToPOD } from './claimable';
 
 import { Status as _Status, statusFromPOD as _statusFromPOD, statusToPOD } from './status';
@@ -78,6 +79,10 @@ export type Hookin = Acknowledged<_Hookin, POD.Hookin>;
 export function hookinFromPod(x: any): Hookin | Error {
   return Acknowledged.fromPOD(_Hookin.fromPOD, (d: _Hookin) => d.toPOD(), x);
 }
+export type Referral = Acknowledged<_Referral, POD.Referral>;
+export function referralFromPod(x: any): Referral | Error {
+  return Acknowledged.fromPOD(_Referral.fromPOD, (d: _Referral) => d.toPOD(), x);
+}
 
 export type FeeBump = Acknowledged<_FeeBump, POD.FeeBump>;
 export function feeBumpFromPod(x: any): FeeBump | Error {
@@ -117,7 +122,8 @@ export function acknowledge(x: _Status | _Claimable, acknowledgeKey: PrivateKey)
     x instanceof _FeeBump ||
     x instanceof _LightningPayment ||
     x instanceof _LightningInvoice ||
-    x instanceof _Hookin
+    x instanceof _Hookin || 
+    x instanceof _Referral
   ) {
     return Acknowledged.acknowledge(x, acknowledgeKey, claimableToPOD);
   } else if (x instanceof AbstractStatus) {

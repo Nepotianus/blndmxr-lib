@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class AbstractStatus {
+    claimableHash;
     constructor(claimableHash) {
         this.claimableHash = claimableHash;
     }

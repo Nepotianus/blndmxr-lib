@@ -3,12 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.acknowledge = exports.statusFromPOD = exports.claimableFromPOD = exports.hookoutFromPod = exports.lightningInvoiceFromPod = exports.lightningPaymentFromPod = exports.feeBumpFromPod = exports.referralFromPod = exports.hookinFromPod = void 0;
 const signature_1 = __importDefault(require("./signature"));
 const hookout_1 = __importDefault(require("./hookout"));
 const fee_bump_1 = __importDefault(require("./fee-bump"));
 const lightning_payment_1 = __importDefault(require("./lightning-payment"));
 const lightning_invoice_1 = __importDefault(require("./lightning-invoice"));
 const hookin_1 = __importDefault(require("./hookin"));
+const referral_1 = __importDefault(require("./referral"));
 const claimable_1 = require("./claimable");
 const status_1 = require("./status");
 const abstract_status_1 = __importDefault(require("./status/abstract-status"));
@@ -16,15 +18,9 @@ const abstract_status_1 = __importDefault(require("./status/abstract-status"));
 // type inference of this thing kind of sucks. So it's recommended to use
 // x: AcknowledgedX = hi.Acknowledged(....)  to guide it
 class Acknowledged {
-    // Warning: The constructor does not validate the signature
-    constructor(contents, acknowledgement, toPOD) {
-        this.acknowledgement = acknowledgement;
-        this.contents = contents;
-        this.toPOD = () => ({
-            acknowledgement: this.acknowledgement.toPOD(),
-            ...toPOD(this.contents),
-        });
-    }
+    acknowledgement;
+    contents;
+    toPOD;
     static acknowledge(contents, acknowledgeKey, toPOD) {
         const hash = contents.hash();
         const acknowledgement = signature_1.default.compute(hash.buffer, acknowledgeKey);
@@ -49,12 +45,25 @@ class Acknowledged {
     hash() {
         return this.contents.hash();
     }
+    // Warning: The constructor does not validate the signature
+    constructor(contents, acknowledgement, toPOD) {
+        this.acknowledgement = acknowledgement;
+        this.contents = contents;
+        this.toPOD = () => ({
+            acknowledgement: this.acknowledgement.toPOD(),
+            ...toPOD(this.contents),
+        });
+    }
 }
 exports.default = Acknowledged;
 function hookinFromPod(x) {
     return Acknowledged.fromPOD(hookin_1.default.fromPOD, (d) => d.toPOD(), x);
 }
 exports.hookinFromPod = hookinFromPod;
+function referralFromPod(x) {
+    return Acknowledged.fromPOD(referral_1.default.fromPOD, (d) => d.toPOD(), x);
+}
+exports.referralFromPod = referralFromPod;
 function feeBumpFromPod(x) {
     return Acknowledged.fromPOD(fee_bump_1.default.fromPOD, (d) => d.toPOD(), x);
 }
@@ -84,7 +93,8 @@ function acknowledge(x, acknowledgeKey) {
         x instanceof fee_bump_1.default ||
         x instanceof lightning_payment_1.default ||
         x instanceof lightning_invoice_1.default ||
-        x instanceof hookin_1.default) {
+        x instanceof hookin_1.default ||
+        x instanceof referral_1.default) {
         return Acknowledged.acknowledge(x, acknowledgeKey, claimable_1.claimableToPOD);
     }
     else if (x instanceof abstract_status_1.default) {

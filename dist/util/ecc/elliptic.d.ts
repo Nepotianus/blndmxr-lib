@@ -1,19 +1,19 @@
 export declare type Scalar = bigint;
 export declare const Scalar: {
-    fromBytes(buf: Uint8Array): bigint | Error;
-    fromHex(hex: string): bigint | Error;
-    toBytes(n: bigint): Uint8Array;
-    toHex(n: bigint): string;
+    fromBytes(buf: Uint8Array): Scalar | Error;
+    fromHex(hex: string): Scalar | Error;
+    toBytes(n: Scalar): Uint8Array;
+    toHex(n: Scalar): string;
 };
 export interface Point {
     readonly x: bigint;
     readonly y: bigint;
 }
 export declare const Point: {
-    fromPrivKey(privkey: bigint): Point;
-    fromBytes(buf: Uint8Array): Error | Point;
+    fromPrivKey(privkey: Scalar): Point;
+    fromBytes(buf: Uint8Array): Point | Error;
     fromX(x: bigint, isOdd: boolean): Error | Point;
-    fromHex(hex: string): Error | Point;
+    fromHex(hex: string): Point | Error;
     toHex(point: Point): string;
     toBytes(point: Point): Uint8Array;
 };

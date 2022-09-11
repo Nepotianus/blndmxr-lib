@@ -1,38 +1,55 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.naiveMultiply = exports.pointMultiply = exports.negatePoint = exports.pointSubtract = exports.pointAdd = exports.pointEq = exports.scalarInverse = exports.scalarNegate = exports.scalarMultiply = exports.scalarAdd = exports.INFINITE_POINT = exports.Point = exports.Scalar = void 0;
 const check = __importStar(require("./check"));
 const util_1 = require("./util");
 exports.Scalar = {
     fromBytes(buf) {
-        const priv = util_1.bufferToBigInt(buf);
+        const priv = (0, util_1.bufferToBigInt)(buf);
         if (!check.isValidPrivkey(priv)) {
             return new Error('scalar was not valid private key');
         }
         return priv;
     },
     fromHex(hex) {
-        const buff = util_1.bufferFromHex(hex);
+        const buff = (0, util_1.bufferFromHex)(hex);
         if (buff instanceof Error) {
             return buff;
         }
-        const priv = util_1.bufferToBigInt(buff);
+        const priv = (0, util_1.bufferToBigInt)(buff);
         if (!check.isValidPrivkey(priv)) {
             return new Error('scalar was not valid private key');
         }
         return priv;
     },
     toBytes(n) {
-        return util_1.buffer32FromBigInt(n);
+        return (0, util_1.buffer32FromBigInt)(n);
     },
     toHex(n) {
-        return util_1.bufferToHex(util_1.buffer32FromBigInt(n));
+        return (0, util_1.bufferToHex)((0, util_1.buffer32FromBigInt)(n));
     },
 };
 exports.Point = {
@@ -43,23 +60,23 @@ exports.Point = {
         return pointMultiply(util_1.curve.g, privkey);
     },
     fromBytes(buf) {
-        return util_1.pointFromBuffer(buf);
+        return (0, util_1.pointFromBuffer)(buf);
     },
     fromX(x, isOdd) {
-        return util_1.pointFromX(x, isOdd ? BigInt(1) : BigInt(0));
+        return (0, util_1.pointFromX)(x, isOdd ? BigInt(1) : BigInt(0));
     },
     fromHex(hex) {
-        const buff = util_1.bufferFromHex(hex);
+        const buff = (0, util_1.bufferFromHex)(hex);
         if (buff instanceof Error) {
             throw buff;
         }
         return exports.Point.fromBytes(buff);
     },
     toHex(point) {
-        return util_1.bufferToHex(util_1.pointToBuffer(point));
+        return (0, util_1.bufferToHex)((0, util_1.pointToBuffer)(point));
     },
     toBytes(point) {
-        return util_1.pointToBuffer(point);
+        return (0, util_1.pointToBuffer)(point);
     },
 };
 exports.INFINITE_POINT = new (class {
@@ -85,7 +102,7 @@ function scalarNegate(a) {
 exports.scalarNegate = scalarNegate;
 // scalar^-1 mod N
 function scalarInverse(a) {
-    return util_1.modInverse(a, util_1.curve.n);
+    return (0, util_1.modInverse)(a, util_1.curve.n);
 }
 exports.scalarInverse = scalarInverse;
 // POINT MATH
@@ -131,10 +148,10 @@ function naiveAdd(a, b) {
         return exports.INFINITE_POINT;
     }
     const lam = a.x === b.x && a.y === b.y
-        ? ((BigInt(3) * a.x * a.x + util_1.curve.a) * util_1.powmod(BigInt(2) * a.y, util_1.curve.p - BigInt(2), util_1.curve.p)) % util_1.curve.p
-        : ((b.y - a.y) * util_1.powmod(b.x - a.x, util_1.curve.p - BigInt(2), util_1.curve.p)) % util_1.curve.p;
+        ? ((BigInt(3) * a.x * a.x + util_1.curve.a) * (0, util_1.powmod)(BigInt(2) * a.y, util_1.curve.p - BigInt(2), util_1.curve.p)) % util_1.curve.p
+        : ((b.y - a.y) * (0, util_1.powmod)(b.x - a.x, util_1.curve.p - BigInt(2), util_1.curve.p)) % util_1.curve.p;
     const x3 = (lam * lam - a.x - b.x) % util_1.curve.p;
-    const y = util_1.mod(lam * (a.x - x3) - a.y, util_1.curve.p);
+    const y = (0, util_1.mod)(lam * (a.x - x3) - a.y, util_1.curve.p);
     return { x: x3, y };
 }
 function naiveMultiply(point, scalar) {
@@ -154,7 +171,7 @@ function inv(a, n) {
     if (a === BigInt(0)) {
         return BigInt(0);
     }
-    let [lm, hm, low, high] = [BigInt(1), BigInt(0), util_1.mod(a, n), n];
+    let [lm, hm, low, high] = [BigInt(1), BigInt(0), (0, util_1.mod)(a, n), n];
     while (low > 1) {
         const r = high / low;
         const [nm, _new] = [hm - lm * r, high - low * r];
@@ -168,7 +185,7 @@ function fromJacobian(j) {
     }
     const z = inv(j[2], util_1.curve.p);
     const x = (j[0] * z ** BigInt(2)) % util_1.curve.p;
-    const y = util_1.mod(j[1] * z ** BigInt(3), util_1.curve.p);
+    const y = (0, util_1.mod)(j[1] * z ** BigInt(3), util_1.curve.p);
     return { x, y };
 }
 function toJacobian(point) {

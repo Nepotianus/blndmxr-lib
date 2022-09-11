@@ -9,6 +9,8 @@ const claim_request_1 = __importDefault(require("../claim-request"));
 const hash_1 = __importDefault(require("../hash"));
 // The response embeds the request, to make it easier to store/verify
 class Claimed extends abstract_status_1.default {
+    claimRequest;
+    blindedReceipts;
     constructor(claimRequest, blindedReceipts) {
         super(claimRequest.claimableHash);
         this.claimRequest = claimRequest;
